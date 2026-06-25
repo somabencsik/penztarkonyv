@@ -1,6 +1,6 @@
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout, QTabWidget, QLabel
+    QWidget, QVBoxLayout, QLabel
 )
 from PySide6_VerticalQTabWidget import VerticalQTabWidget
 
@@ -12,7 +12,7 @@ from src.summary_page import SummaryPage
 class MainWindow(QWidget):
     def __init__(self) -> None:
         super().__init__()
-        self.resize(800, 600)
+        self.resize(1024, 768)
         self.setWindowTitle("Pénztárkönyv")
 
         self.summary_page = None
@@ -24,7 +24,7 @@ class MainWindow(QWidget):
         layout = QVBoxLayout()
 
         title = QLabel("Bencsik")
-        title.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        title.setAlignment(Qt.AlignmentFlag.AlignLeft)
         title_font = title.font()
         title_font.setPointSize(18)
         title_font.setBold(True)
