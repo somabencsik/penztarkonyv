@@ -1,8 +1,7 @@
 from datetime import datetime
 
-from PySide6.QtCore import QDate, Qt
+from PySide6.QtCore import QDate, Qt, Slot, Signal
 from PySide6.QtWidgets import (
-    QAbstractSpinBox,
     QDateTimeEdit,
     QFrame,
     QGridLayout,
@@ -12,12 +11,13 @@ from PySide6.QtWidgets import (
     QPushButton,
     QScrollArea,
     QSizePolicy,
-    QSpinBox,
     QTabWidget,
     QVBoxLayout,
     QWidget,
 )
 
+from utils import create_centered_label, create_spin_box
+from src.summary_page import SummaryMonthRow
 
 class MonthlyPage(QWidget):
 
@@ -78,13 +78,10 @@ class MonthlyPage(QWidget):
         ]
 
         for col, text in enumerate(headers):
-            lbl = QLabel(text)
             label_width = self.INCOME_COLUMN_WIDTH[col]
             if col == 3:
                 label_width -= 25
-            lbl.setFixedWidth(label_width)
-            lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            lbl.setWordWrap(True)
+            lbl = create_centered_label(text, label_width)
             header_layout.addWidget(lbl, 0, col)
             header_labels.append(lbl)
 
@@ -138,13 +135,13 @@ class MonthlyPage(QWidget):
             "Összesen"
         ]
         for col, text in enumerate(headers):
-            lbl = QLabel(text)
-            lbl.setFixedWidth(self.EXPENSE_COLUMN_WIDTH[col])
+            lbl = create_centered_label(text, self.EXPENSE_COLUMN_WIDTH[col])
+
             alignment = Qt.AlignmentFlag.AlignCenter
             if col > 3:
                 alignment = Qt.AlignmentFlag.AlignLeft
             lbl.setAlignment(alignment)
-            lbl.setWordWrap(True)
+
             header_layout.addWidget(lbl, 0, col)
             header_labels.append(lbl)
 
@@ -179,26 +176,55 @@ class MonthlyPage(QWidget):
         return widget
 
     def add_income(self) -> None:
-        self.income_layout.addWidget(MonthlyIncomeWidget(
+        new_widget = MonthlyIncomeWidget(
+            self.month,
             self.INCOME_SERIAL_NUMBER,
             self.INCOME_COLUMN_WIDTH
-        ))
+        )
+        new_widget.update_summary.connect(self.update_summary_page)
+        self.income_layout.addWidget(new_widget)
         self.INCOME_SERIAL_NUMBER += 1
 
     def add_expense(self) -> None:
-        self.expense_layout.addWidget(MonthlyExpanseWidget(
+        new_widget = MonthlyExpanseWidget(
+            self.month,
             self.EXPENSE_SERIAL_NUMBER,
             self.EXPENSE_COLUMN_WIDTH
-        ))
+        )
+        new_widget.update_summary.connect(self.update_summary_page)
+        self.expense_layout.addWidget(new_widget)
         self.EXPENSE_SERIAL_NUMBER += 1
 
+    @Slot()
+    def update_summary_page(self) -> None:
+        for summary_month in SummaryMonthRow.objects:
+            monthly_income = 0
+            monthly_support = 0
+            for monthly in MonthlyIncomeWidget.objects:
+                if summary_month.month != monthly.month:
+                    continue
+                monthly_income += monthly.price.value() + monthly.other.value()
+                monthly_support += monthly.non_tax.value()
+            summary_month.income.setValue(monthly_income)
+            summary_month.support.setValue(monthly_support)
+
+            monthly_expense = 0
+            for monthly in MonthlyExpanseWidget.objects:
+                if summary_month.month != monthly.month:
+                    continue
+                monthly_expense += (
+                        monthly.material_price.value() + monthly.other.value() + monthly.transmit_price.value()
+                )
+            summary_month.expense.setValue(monthly_expense)
 
 class MonthlyIncomeWidget(QWidget):
 
     objects = []
+    update_summary = Signal()
 
-    def __init__(self, serial_number: int, column_width: list[int]) -> None:
+    def __init__(self, month: str, serial_number: int, column_width: list[int]) -> None:
         super().__init__()
+        self.month = month
         self.serial_number = serial_number
         self.column_width = column_width
 
@@ -219,32 +245,41 @@ class MonthlyIncomeWidget(QWidget):
         date_widget.setFixedWidth(self.column_width[1])
         layout.addWidget(date_widget)
 
-        layout.addWidget(self.create_spin_box(self.column_width[2]))
+        layout.addWidget(create_spin_box(self.column_width[2]))
 
         title_input = QLineEdit()
         title_input.setFixedWidth(self.column_width[3])
         layout.addWidget(title_input)
 
-        for i in range(4):
-            layout.addWidget(self.create_spin_box(self.column_width[4 + i]))
+        self.price = create_spin_box(self.column_width[4])
+        self.price.valueChanged.connect(self.price_changed)
+        self.other = create_spin_box(self.column_width[5])
+        self.other.valueChanged.connect(self.price_changed)
+        self.non_tax = create_spin_box(self.column_width[6])
+        self.non_tax.valueChanged.connect(self.price_changed)
+        self.summary = create_spin_box(self.column_width[7])
+
+        layout.addWidget(self.price)
+        layout.addWidget(self.other)
+        layout.addWidget(self.non_tax)
+        layout.addWidget(self.summary)
 
         self.setLayout(layout)
 
-    def create_spin_box(self, width_size: int = 0) -> QSpinBox:
-        spin_box = QSpinBox()
-        spin_box.setMinimum(0)
-        spin_box.setMaximum(2_000_000_000)
-        spin_box.setFixedWidth(width_size)
-        spin_box.setButtonSymbols(QAbstractSpinBox.ButtonSymbols.NoButtons)
-        return spin_box
+    @Slot()
+    def price_changed(self):
+        self.summary.setValue(self.price.value() + self.other.value() + self.non_tax.value())
+        self.update_summary.emit()
 
 
 class MonthlyExpanseWidget(QWidget):
     
     objects = []
+    update_summary = Signal()
 
-    def __init__(self, serial_number: int, column_width: list[int]) -> None:
+    def __init__(self, month: str, serial_number: int, column_width: list[int]) -> None:
         super().__init__()
+        self.month = month
         self.serial_number = serial_number
         self.column_width = column_width
 
@@ -265,19 +300,26 @@ class MonthlyExpanseWidget(QWidget):
         date_widget.setFixedWidth(self.column_width[1])
         layout.addWidget(date_widget)
 
-        title_input = QLineEdit()
-        title_input.setFixedWidth(self.column_width[2])
-        layout.addWidget(title_input)
+        #title_input = QLineEdit()
+        #title_input.setFixedWidth(self.column_width[2])
+        #layout.addWidget(title_input)
 
-        for i in range(3):
-            layout.addWidget(self.create_spin_box(self.column_width[3 + i]))
+        self.material_price = create_spin_box(self.column_width[2])
+        self.material_price.valueChanged.connect(self.price_changed)
+        layout.addWidget(self.material_price)
+        self.other = create_spin_box(self.column_width[3])
+        self.other.valueChanged.connect(self.price_changed)
+        layout.addWidget(self.other)
+        self.transmit_price = create_spin_box(self.column_width[4])
+        self.transmit_price.valueChanged.connect(self.price_changed)
+        layout.addWidget(self.transmit_price)
+        self.summary = create_spin_box(self.column_width[5])
+        self.summary.valueChanged.connect(self.price_changed)
+        layout.addWidget(self.summary)
 
         self.setLayout(layout)
 
-    def create_spin_box(self, width_size: int = 0) -> QSpinBox:
-        spin_box = QSpinBox()
-        spin_box.setMinimum(0)
-        spin_box.setMaximum(2_000_000_000)
-        spin_box.setFixedWidth(width_size)
-        spin_box.setButtonSymbols(QAbstractSpinBox.ButtonSymbols.NoButtons)
-        return spin_box
+    @Slot()
+    def price_changed(self) -> None:
+        self.summary.setValue(self.material_price.value() + self.other.value() + self.transmit_price.value())
+        self.update_summary.emit()
