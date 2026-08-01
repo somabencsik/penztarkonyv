@@ -16,13 +16,15 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from utils import create_centered_label, create_spin_box
+from src import config
+from src.utils import create_centered_label, create_spin_box
 from src.summary_page import SummaryMonthRow
+
 
 class MonthlyPage(QWidget):
 
-    INCOME_COLUMN_WIDTH = [50, 65, 80, 270, 80, 80, 80, 80]
-    EXPENSE_COLUMN_WIDTH = [50, 65, 330, 80, 80, 80]
+    INCOME_COLUMN_WIDTH = [50, 140, 80, 220, 100, 100, 100, 100]
+    EXPENSE_COLUMN_WIDTH = [50, 140, 100, 100, 100, 100]
     INCOME_SERIAL_NUMBER = 0
     EXPENSE_SERIAL_NUMBER = 0
 
@@ -62,7 +64,7 @@ class MonthlyPage(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
 
         header_widget = QWidget()
-        header_layout = QGridLayout(header_widget)
+        header_layout = QHBoxLayout(header_widget)
         header_layout.setSpacing(4)
 
         header_labels = []
@@ -79,10 +81,12 @@ class MonthlyPage(QWidget):
 
         for col, text in enumerate(headers):
             label_width = self.INCOME_COLUMN_WIDTH[col]
-            if col == 3:
-                label_width -= 25
+            if col == 5:
+                label_width -= 20
+            if col == 6:
+                label_width += 25
             lbl = create_centered_label(text, label_width)
-            header_layout.addWidget(lbl, 0, col)
+            header_layout.addWidget(lbl)#, 0, col)
             header_labels.append(lbl)
 
         layout.addWidget(header_widget)
@@ -136,11 +140,6 @@ class MonthlyPage(QWidget):
         ]
         for col, text in enumerate(headers):
             lbl = create_centered_label(text, self.EXPENSE_COLUMN_WIDTH[col])
-
-            alignment = Qt.AlignmentFlag.AlignCenter
-            if col > 3:
-                alignment = Qt.AlignmentFlag.AlignLeft
-            lbl.setAlignment(alignment)
 
             header_layout.addWidget(lbl, 0, col)
             header_labels.append(lbl)
@@ -217,6 +216,7 @@ class MonthlyPage(QWidget):
                 )
             summary_month.expense.setValue(monthly_expense)
 
+
 class MonthlyIncomeWidget(QWidget):
 
     objects = []
@@ -240,7 +240,7 @@ class MonthlyIncomeWidget(QWidget):
         layout.addWidget(serial_label)
 
         today_date = datetime.now()
-        today_date = QDate(today_date.year, today_date.month, today_date.day)
+        today_date = QDate(today_date.year, [i for i, month in config.MONTHS.items() if self.month == month][0], today_date.day)
         date_widget = QDateTimeEdit(today_date)
         date_widget.setFixedWidth(self.column_width[1])
         layout.addWidget(date_widget)
@@ -253,15 +253,20 @@ class MonthlyIncomeWidget(QWidget):
 
         self.price = create_spin_box(self.column_width[4])
         self.price.valueChanged.connect(self.price_changed)
+
         self.other = create_spin_box(self.column_width[5])
         self.other.valueChanged.connect(self.price_changed)
+
         self.non_tax = create_spin_box(self.column_width[6])
         self.non_tax.valueChanged.connect(self.price_changed)
-        self.summary = create_spin_box(self.column_width[7])
+
+        self.summary = create_spin_box(self.column_width[7], allow_minus=True)
+        self.summary.valueChanged.connect(self.price_changed)
 
         layout.addWidget(self.price)
         layout.addWidget(self.other)
         layout.addWidget(self.non_tax)
+        layout.addSpacing(20)
         layout.addWidget(self.summary)
 
         self.setLayout(layout)
@@ -295,31 +300,35 @@ class MonthlyExpanseWidget(QWidget):
         layout.addWidget(serial_label)
 
         today_date = datetime.now()
-        today_date = QDate(today_date.year, today_date.month, today_date.day)
+        today_date = QDate(today_date.year, [i for i, month in config.MONTHS.items() if self.month == month][0], today_date.day)
         date_widget = QDateTimeEdit(today_date)
         date_widget.setFixedWidth(self.column_width[1])
         layout.addWidget(date_widget)
 
-        #title_input = QLineEdit()
-        #title_input.setFixedWidth(self.column_width[2])
-        #layout.addWidget(title_input)
-
         self.material_price = create_spin_box(self.column_width[2])
         self.material_price.valueChanged.connect(self.price_changed)
-        layout.addWidget(self.material_price)
+
         self.other = create_spin_box(self.column_width[3])
         self.other.valueChanged.connect(self.price_changed)
-        layout.addWidget(self.other)
+
         self.transmit_price = create_spin_box(self.column_width[4])
         self.transmit_price.valueChanged.connect(self.price_changed)
-        layout.addWidget(self.transmit_price)
+
         self.summary = create_spin_box(self.column_width[5])
         self.summary.valueChanged.connect(self.price_changed)
+
+
+        layout.addWidget(self.material_price)
+        layout.addWidget(self.other)
+        layout.addWidget(self.transmit_price)
+        layout.addSpacing(20)
         layout.addWidget(self.summary)
 
         self.setLayout(layout)
 
     @Slot()
     def price_changed(self) -> None:
-        self.summary.setValue(self.material_price.value() + self.other.value() + self.transmit_price.value())
+        summary = self.material_price.value() + self.other.value() + self.transmit_price.value()
+        summary = min(2_000_000_000, summary)
+        self.summary.setValue(summary)
         self.update_summary.emit()

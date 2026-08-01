@@ -26,7 +26,7 @@ class MainWindow(QWidget):
         title = QLabel("Bencsik")
         title.setAlignment(Qt.AlignmentFlag.AlignLeft)
         title_font = title.font()
-        title_font.setPointSize(18)
+        title_font.setPixelSize(36)
         title_font.setBold(True)
         title.setFont(title_font)
         layout.addWidget(title)

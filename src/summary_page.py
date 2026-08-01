@@ -103,8 +103,9 @@ class SummaryMonthRow(QHBoxLayout):
         self.expense = create_spin_box()
         self.expense.valueChanged.connect(self.value_changed)
         self.addWidget(self.expense)
-        self.summary = create_spin_box()
+        self.summary = create_spin_box(allow_minus=True)
         self.summary.valueChanged.connect(self.value_changed)
+        self.addSpacing(20)
         self.addWidget(self.summary)
 
     @Slot()
@@ -124,7 +125,7 @@ class SummaryQuarters(QWidget):
         layout.addSpacerItem(QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding))
 
         header_row = QHBoxLayout()
-        header_row.addWidget(create_centered_label("Negyedéves Összesen", set_bold=True))
+        header_row.addWidget(create_centered_label("Negyedéves Összesen", set_bold=True, align_center=True))
         layout.addLayout(header_row)
 
         sub_header_row = QHBoxLayout()
@@ -165,8 +166,9 @@ class SummaryQuarterRow(QHBoxLayout):
         self.expense = create_spin_box()
         self.expense.valueChanged.connect(self.value_changed)
         self.addWidget(self.expense)
-        self.summary = create_spin_box()
+        self.summary = create_spin_box(allow_minus=True)
         self.summary.valueChanged.connect(self.value_changed)
+        self.addSpacing(20)
         self.addWidget(self.summary)
 
     @Slot()
