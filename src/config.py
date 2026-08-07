@@ -1,3 +1,5 @@
+import os
+
 MONTHS = {
     1: "Január",
     2: "Február",
@@ -12,3 +14,5 @@ MONTHS = {
     11: "November",
     12: "December"
 }
+
+DB_PATH = os.path.join(f"{os.path.expanduser('~')}", ".penztarkonyv", "db.json")

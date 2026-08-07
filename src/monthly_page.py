@@ -28,8 +28,9 @@ class MonthlyPage(QWidget):
     INCOME_SERIAL_NUMBER = 0
     EXPENSE_SERIAL_NUMBER = 0
 
-    def __init__(self, month: str) -> None:
+    def __init__(self, year: int, month: str) -> None:
         super().__init__()
+        self.year = year
         self.month = month
 
         self.setup_ui()
@@ -176,6 +177,7 @@ class MonthlyPage(QWidget):
 
     def add_income(self) -> None:
         new_widget = MonthlyIncomeWidget(
+            self.year,
             self.month,
             self.INCOME_SERIAL_NUMBER,
             self.INCOME_COLUMN_WIDTH
@@ -186,6 +188,7 @@ class MonthlyPage(QWidget):
 
     def add_expense(self) -> None:
         new_widget = MonthlyExpanseWidget(
+            self.year,
             self.month,
             self.EXPENSE_SERIAL_NUMBER,
             self.EXPENSE_COLUMN_WIDTH
@@ -222,8 +225,9 @@ class MonthlyIncomeWidget(QWidget):
     objects = []
     update_summary = Signal()
 
-    def __init__(self, month: str, serial_number: int, column_width: list[int]) -> None:
+    def __init__(self, year: int, month: str, serial_number: int, column_width: list[int]) -> None:
         super().__init__()
+        self.year = year
         self.month = month
         self.serial_number = serial_number
         self.column_width = column_width
@@ -240,7 +244,7 @@ class MonthlyIncomeWidget(QWidget):
         layout.addWidget(serial_label)
 
         today_date = datetime.now()
-        today_date = QDate(today_date.year, [i for i, month in config.MONTHS.items() if self.month == month][0], today_date.day)
+        today_date = QDate(self.year, [i for i, month in config.MONTHS.items() if self.month == month][0], today_date.day)
         date_widget = QDateTimeEdit(today_date)
         date_widget.setFixedWidth(self.column_width[1])
         layout.addWidget(date_widget)
@@ -282,8 +286,9 @@ class MonthlyExpanseWidget(QWidget):
     objects = []
     update_summary = Signal()
 
-    def __init__(self, month: str, serial_number: int, column_width: list[int]) -> None:
+    def __init__(self, year: int, month: str, serial_number: int, column_width: list[int]) -> None:
         super().__init__()
+        self.year = year
         self.month = month
         self.serial_number = serial_number
         self.column_width = column_width
@@ -300,7 +305,7 @@ class MonthlyExpanseWidget(QWidget):
         layout.addWidget(serial_label)
 
         today_date = datetime.now()
-        today_date = QDate(today_date.year, [i for i, month in config.MONTHS.items() if self.month == month][0], today_date.day)
+        today_date = QDate(self.year, [i for i, month in config.MONTHS.items() if self.month == month][0], today_date.day)
         date_widget = QDateTimeEdit(today_date)
         date_widget.setFixedWidth(self.column_width[1])
         layout.addWidget(date_widget)
