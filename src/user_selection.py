@@ -19,9 +19,15 @@ class UserSelection(QWidget):
 
     def setup_ui(self) -> None:
         main_layout = QVBoxLayout()
-        selector_layout = QHBoxLayout()
-
         user_select = QVBoxLayout()
+
+        user_select.addSpacerItem(QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding))
+        user_select.addWidget(create_centered_label("Válasszon évszámot", align_center=True))
+        self.date_selector = QComboBox()
+        self.date_selector.addItems([f"{y}" for y in range(1950, 2150)])
+        self.date_selector.setCurrentText(f"{datetime.now().year}")
+        user_select.addWidget(self.date_selector)
+
         user_select.addSpacerItem(QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding))
         user_select.addWidget(create_centered_label("Válasszon felhasználót", align_center=True))
         self.user_selector = QComboBox()
@@ -30,6 +36,7 @@ class UserSelection(QWidget):
         user_select.addSpacerItem(QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding))
 
         new_user = QVBoxLayout()
+
         new_user.addWidget(create_centered_label("Felhasználó hozzáadása", align_center=True))
         input_layout = QHBoxLayout()
         input_layout.addWidget(QLabel("Felhasználó neve:"))
@@ -42,20 +49,12 @@ class UserSelection(QWidget):
         user_select.addWidget(btn_add_user)
 
         user_select.addSpacerItem(QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding))
-        selector_layout.addLayout(user_select, stretch=1)
-
-        selector_layout.addSpacerItem(QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum))
 
         date_select = QVBoxLayout()
         date_select.addSpacerItem(QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding))
-        date_select.addWidget(create_centered_label("Válasszon évszámot", align_center=True))
-        self.date_selector = QComboBox()
-        self.date_selector.addItems([f"{y}" for y in range(1950, 2150)])
-        self.date_selector.setCurrentText(f"{datetime.now().year}")
-        date_select.addWidget(self.date_selector)
+
         date_select.addSpacerItem(QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding))
-        selector_layout.addLayout(date_select, stretch=1)
-        main_layout.addLayout(selector_layout, stretch=1)
+        main_layout.addLayout(user_select, stretch=1)
 
         main_layout.addSpacerItem(QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding))
 
