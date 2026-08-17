@@ -6,7 +6,7 @@ from PySide6_VerticalQTabWidget import VerticalQTabWidget
 
 from src.config import MONTHS
 from src.monthly_page import MonthlyPage, MonthlyIncomeWidget, MonthlyExpanseWidget
-from src.summary_page import SummaryPage
+from src.summary_page import SummaryPage, SummaryMonthRow
 from src.user_selection import UserSelection
 
 from src.db import read_db, save_db
@@ -55,6 +55,7 @@ class MainWindow(QWidget):
         self.current_user = user
         MonthlyIncomeWidget.objects = []
         MonthlyExpanseWidget.objects = []
+        SummaryMonthRow.objects = []
 
         if year not in self.db[self.current_user]:
             self.db[self.current_user][year] = {
@@ -143,6 +144,11 @@ class MainWindow(QWidget):
 
         for _, month_name in MONTHS.items():
             monthly_page = MonthlyPage(year, month_name)
+            for income_data in self.db[self.current_user][year]["Income"][month_name]:
+                monthly_page.add_income(income_data)
+            for expense_data in self.db[self.current_user][year]["Expenses"][month_name]:
+                monthly_page.add_expense(expense_data)
+            monthly_page.update_summary_page()
             monthly_page.save_db.connect(self.save_incomes_expenses)
             self.tabs.append(monthly_page)
             tab_widget.addTab(self.tabs[-1], month_name)

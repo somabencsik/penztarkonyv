@@ -117,7 +117,7 @@ class MonthlyPage(QWidget):
         btn_add.pressed.connect(self.add_income)
         layout.addWidget(btn_add, 0, Qt.AlignmentFlag.AlignCenter)
 
-        self.add_income()
+        #self.add_income()
 
         widget.setLayout(layout)
         return widget
@@ -172,30 +172,42 @@ class MonthlyPage(QWidget):
         btn_add.pressed.connect(self.add_expense)
         layout.addWidget(btn_add, 0, Qt.AlignmentFlag.AlignCenter)
         
-        self.add_expense()
+        #self.add_expense()
 
         widget.setLayout(layout)
         return widget
 
-    def add_income(self) -> None:
+    def add_income(self, income_data: dict | None = None) -> None:
         new_widget = MonthlyIncomeWidget(
             self.year,
             self.month,
             self.INCOME_SERIAL_NUMBER,
             self.INCOME_COLUMN_WIDTH
         )
+        if income_data is not None:
+            new_widget.date_widget.setDate(QDate.fromString(income_data["date"]))
+            new_widget.certificate_number.setValue(income_data["certificate_number"])
+            new_widget.title_input.setText(income_data["title"])
+            new_widget.price.setValue(income_data["price"])
+            new_widget.other.setValue(income_data["other"])
+            new_widget.non_tax.setValue(income_data["non-tax"])
         new_widget.update_summary.connect(self.update_summary_page)
         new_widget.save_db.connect(self.save_db.emit)
         self.income_layout.addWidget(new_widget)
         self.INCOME_SERIAL_NUMBER += 1
 
-    def add_expense(self) -> None:
+    def add_expense(self, expense_data: dict | None = None) -> None:
         new_widget = MonthlyExpanseWidget(
             self.year,
             self.month,
             self.EXPENSE_SERIAL_NUMBER,
             self.EXPENSE_COLUMN_WIDTH
         )
+        if expense_data is not None:
+            new_widget.date_widget.setDate(QDate.fromString(expense_data["date"]))
+            new_widget.material_price.setValue(expense_data["material_price"])
+            new_widget.other.setValue(expense_data["other"])
+            new_widget.transmit_price.setValue(expense_data["transmit_price"])
         new_widget.update_summary.connect(self.update_summary_page)
         new_widget.save_db.connect(self.save_db.emit)
         self.expense_layout.addWidget(new_widget)
