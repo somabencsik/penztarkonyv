@@ -23,12 +23,14 @@ from src.summary_page import SummaryMonthRow
 
 class MonthlyPage(QWidget):
 
+    save_db = Signal()
+
     INCOME_COLUMN_WIDTH = [50, 140, 80, 220, 100, 100, 100, 100]
     EXPENSE_COLUMN_WIDTH = [50, 140, 100, 100, 100, 100]
     INCOME_SERIAL_NUMBER = 0
     EXPENSE_SERIAL_NUMBER = 0
 
-    def __init__(self, year: int, month: str) -> None:
+    def __init__(self, year: str, month: str) -> None:
         super().__init__()
         self.year = year
         self.month = month
@@ -183,6 +185,7 @@ class MonthlyPage(QWidget):
             self.INCOME_COLUMN_WIDTH
         )
         new_widget.update_summary.connect(self.update_summary_page)
+        new_widget.save_db.connect(self.save_db.emit)
         self.income_layout.addWidget(new_widget)
         self.INCOME_SERIAL_NUMBER += 1
 
@@ -194,6 +197,7 @@ class MonthlyPage(QWidget):
             self.EXPENSE_COLUMN_WIDTH
         )
         new_widget.update_summary.connect(self.update_summary_page)
+        new_widget.save_db.connect(self.save_db.emit)
         self.expense_layout.addWidget(new_widget)
         self.EXPENSE_SERIAL_NUMBER += 1
 
@@ -224,8 +228,9 @@ class MonthlyIncomeWidget(QWidget):
 
     objects = []
     update_summary = Signal()
+    save_db = Signal()
 
-    def __init__(self, year: int, month: str, serial_number: int, column_width: list[int]) -> None:
+    def __init__(self, year: str, month: str, serial_number: int, column_width: list[int]) -> None:
         super().__init__()
         self.year = year
         self.month = month
@@ -244,16 +249,17 @@ class MonthlyIncomeWidget(QWidget):
         layout.addWidget(serial_label)
 
         today_date = datetime.now()
-        today_date = QDate(self.year, [i for i, month in config.MONTHS.items() if self.month == month][0], today_date.day)
-        date_widget = QDateTimeEdit(today_date)
-        date_widget.setFixedWidth(self.column_width[1])
-        layout.addWidget(date_widget)
+        today_date = QDate(int(self.year), [i for i, month in config.MONTHS.items() if self.month == month][0], today_date.day)
+        self.date_widget = QDateTimeEdit(today_date)
+        self.date_widget.setFixedWidth(self.column_width[1])
+        layout.addWidget(self.date_widget)
 
-        layout.addWidget(create_spin_box(self.column_width[2]))
+        self.certificate_number = create_spin_box(self.column_width[2])
+        layout.addWidget(self.certificate_number)
 
-        title_input = QLineEdit()
-        title_input.setFixedWidth(self.column_width[3])
-        layout.addWidget(title_input)
+        self.title_input = QLineEdit()
+        self.title_input.setFixedWidth(self.column_width[3])
+        layout.addWidget(self.title_input)
 
         self.price = create_spin_box(self.column_width[4])
         self.price.valueChanged.connect(self.price_changed)
@@ -279,14 +285,16 @@ class MonthlyIncomeWidget(QWidget):
     def price_changed(self):
         self.summary.setValue(self.price.value() + self.other.value() + self.non_tax.value())
         self.update_summary.emit()
+        self.save_db.emit()
 
 
 class MonthlyExpanseWidget(QWidget):
     
     objects = []
     update_summary = Signal()
+    save_db = Signal()
 
-    def __init__(self, year: int, month: str, serial_number: int, column_width: list[int]) -> None:
+    def __init__(self, year: str, month: str, serial_number: int, column_width: list[int]) -> None:
         super().__init__()
         self.year = year
         self.month = month
@@ -305,10 +313,10 @@ class MonthlyExpanseWidget(QWidget):
         layout.addWidget(serial_label)
 
         today_date = datetime.now()
-        today_date = QDate(self.year, [i for i, month in config.MONTHS.items() if self.month == month][0], today_date.day)
-        date_widget = QDateTimeEdit(today_date)
-        date_widget.setFixedWidth(self.column_width[1])
-        layout.addWidget(date_widget)
+        today_date = QDate(int(self.year), [i for i, month in config.MONTHS.items() if self.month == month][0], today_date.day)
+        self.date_widget = QDateTimeEdit(today_date)
+        self.date_widget.setFixedWidth(self.column_width[1])
+        layout.addWidget(self.date_widget)
 
         self.material_price = create_spin_box(self.column_width[2])
         self.material_price.valueChanged.connect(self.price_changed)
@@ -321,7 +329,6 @@ class MonthlyExpanseWidget(QWidget):
 
         self.summary = create_spin_box(self.column_width[5])
         self.summary.valueChanged.connect(self.price_changed)
-
 
         layout.addWidget(self.material_price)
         layout.addWidget(self.other)
@@ -337,3 +344,4 @@ class MonthlyExpanseWidget(QWidget):
         summary = min(2_000_000_000, summary)
         self.summary.setValue(summary)
         self.update_summary.emit()
+        self.save_db.emit()

@@ -1,11 +1,11 @@
 from PySide6.QtCore import Qt, Slot
 from PySide6.QtWidgets import (
-    QWidget, QVBoxLayout, QLabel, QStackedWidget, QHBoxLayout, QPushButton
+    QWidget, QVBoxLayout, QStackedWidget, QHBoxLayout, QPushButton
 )
 from PySide6_VerticalQTabWidget import VerticalQTabWidget
 
 from src.config import MONTHS
-from src.monthly_page import MonthlyPage
+from src.monthly_page import MonthlyPage, MonthlyIncomeWidget, MonthlyExpanseWidget
 from src.summary_page import SummaryPage
 from src.user_selection import UserSelection
 
@@ -21,6 +21,7 @@ class MainWindow(QWidget):
 
         self.summary_page = None
         self.tabs: list[MonthlyPage] = []
+        self.current_user: str | None = None
 
         self.setup_ui()
 
@@ -49,13 +50,77 @@ class MainWindow(QWidget):
         self.db[new_user] = {}
         save_db(self.db)
 
-    @Slot(str, int)
-    def switch_to_input_page(self, user: str, year: int) -> None:
+    @Slot(str, str)
+    def switch_to_input_page(self, user: str, year: str) -> None:
+        self.current_user = user
+        MonthlyIncomeWidget.objects = []
+        MonthlyExpanseWidget.objects = []
+
+        if year not in self.db[self.current_user]:
+            self.db[self.current_user][year] = {
+                "Income": {month: [] for _, month in MONTHS.items()},
+                "Expenses": {month: [] for _, month in MONTHS.items()}
+            }
+            save_db(self.db)
+
         input_page = self.create_input_page(user, year)
         self.stack.addWidget(input_page)
         self.stack.setCurrentIndex(self.stack.count() - 1)
 
-    def create_input_page(self, user: str, year: int) -> QWidget:
+    @Slot()
+    def save_incomes_expenses(self) -> None:
+        if self.current_user is None:
+            return
+
+        for o in MonthlyIncomeWidget.objects:
+            income_data = {
+                "serial": o.serial_number,
+                "date": o.date_widget.date().toString(),
+                "certificate_number": o.certificate_number.value(),
+                "title": o.title_input.text(),
+                "price": o.price.value(),
+                "other": o.other.value(),
+                "non-tax": o.non_tax.value(),
+                "summary": o.summary.value()
+            }
+
+            found_index: int | None = None
+            for i, data in enumerate(self.db[self.current_user][o.year]["Income"][o.month]):
+                if o.serial_number != data["serial"]:
+                    continue
+                found_index = i
+                break
+
+            if found_index is not None:
+                self.db[self.current_user][o.year]["Income"][o.month][found_index] = income_data
+            else:
+                self.db[self.current_user][o.year]["Income"][o.month].append(income_data)
+
+        for o in MonthlyExpanseWidget.objects:
+            expense_data = {
+                "serial": o.serial_number,
+                "date": o.date_widget.date().toString(),
+                "material_price": o.material_price.value(),
+                "other": o.other.value(),
+                "transmit_price": o.transmit_price.value(),
+                "summary": o.summary.value()
+            }
+
+            found_index: int | None = None
+            for i, data in enumerate(self.db[self.current_user][o.year]["Expenses"][o.month]):
+                if o.serial_number != data["serial"]:
+                    continue
+                found_index = i
+                break
+
+            if found_index is not None:
+                self.db[self.current_user][o.year]["Expenses"][o.month][found_index] = expense_data
+            else:
+                self.db[self.current_user][o.year]["Expenses"][o.month].append(expense_data)
+
+        save_db(self.db)
+
+    def create_input_page(self, user: str, year: str) -> QWidget:
         w = QWidget()
 
         layout = QVBoxLayout()
@@ -77,7 +142,9 @@ class MainWindow(QWidget):
         tab_widget.addTab(self.summary_page, "Összesítés")
 
         for _, month_name in MONTHS.items():
-            self.tabs.append(MonthlyPage(year, month_name))
+            monthly_page = MonthlyPage(year, month_name)
+            monthly_page.save_db.connect(self.save_incomes_expenses)
+            self.tabs.append(monthly_page)
             tab_widget.addTab(self.tabs[-1], month_name)
 
         layout.addWidget(tab_widget)

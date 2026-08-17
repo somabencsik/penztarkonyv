@@ -9,7 +9,7 @@ from src.utils import create_centered_label
 class UserSelection(QWidget):
 
     add_user_to_db = Signal(str)
-    switch_to_input_page = Signal(str, int)
+    switch_to_input_page = Signal(str, str)
 
     def __init__(self, users: list[str]) -> None:
         super().__init__()
@@ -76,4 +76,4 @@ class UserSelection(QWidget):
 
     @Slot()
     def go_to_input_page(self) -> None:
-        self.switch_to_input_page.emit(self.user_selector.currentText(), int(self.date_selector.currentText()))
+        self.switch_to_input_page.emit(self.user_selector.currentText(), self.date_selector.currentText())
