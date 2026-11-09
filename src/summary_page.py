@@ -1,5 +1,6 @@
 from PySide6.QtCore import Signal, Slot
 from PySide6.QtWidgets import (
+    QFileDialog,
     QHBoxLayout,
     QLabel,
     QPushButton,
@@ -7,7 +8,6 @@ from PySide6.QtWidgets import (
     QSpacerItem,
     QVBoxLayout,
     QWidget,
-    QFileDialog,
 )
 
 from src.config import MONTHS
@@ -17,8 +17,9 @@ from src.utils import create_centered_label, create_spin_box
 
 
 class SummaryPage(QWidget):
-    def __init__(self) -> None:
+    def __init__(self, user: str) -> None:
         super().__init__()
+        self.user = user
         self.setup_ui()
 
     def setup_ui(self) -> None:
@@ -50,7 +51,7 @@ class SummaryPage(QWidget):
             )
             if dir_path == "":
                 return
-            create_pdf(selector_window.selected_year, selector_window.selected_months, dir_path)
+            create_pdf(selector_window.selected_year, selector_window.selected_months, dir_path, self.user)
 
 
 class SummaryMonthly(QWidget):

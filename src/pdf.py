@@ -16,7 +16,6 @@ from reportlab.platypus import (
     TableStyle,
 )
 
-from src.config import DEFAULT_PDF_PATH
 from src.db import read_db
 
 INCOME_HEADER = ["Sorszám", "Év", "Hó", "Nap", "Bizonylat szám", "Név", "Értékesítés", "Egyéb", "Nem adóalap", "Összesen"]
@@ -106,43 +105,42 @@ def build_table(header: list[str], rows: list[list[str]], col_widths: list[float
     return table
 
 
-def create_pdf(year: str, months: list[str], output_path: str) -> None:
-    db = read_db()
+def create_pdf(year: str, months: list[str], output_path: str, user: str) -> None:
+    db = read_db()[user]
 
-    for user, yearly in db.items():
-        user_path = os.path.join(output_path, user, f"{year}.pdf")
-        os.makedirs(os.path.dirname(user_path), exist_ok=True)
+    user_path = os.path.join(output_path, user, f"{year}.pdf")
+    os.makedirs(os.path.dirname(user_path), exist_ok=True)
 
-        doc = SimpleDocTemplate(
-            user_path,
-            pagesize=A4,  # portrait: short side on top and bottom
-            title=f"{user} - {year}",
-            leftMargin=30, rightMargin=30, topMargin=30, bottomMargin=30,
-        )
-        income_expenses = yearly[year]
-        story = []
+    doc = SimpleDocTemplate(
+        user_path,
+        pagesize=A4,  # portrait: short side on top and bottom
+        title=f"{user} - {year}",
+        leftMargin=30, rightMargin=30, topMargin=30, bottomMargin=30,
+    )
+    income_expenses = db[year]
+    story = []
 
-        for index, month in enumerate(months):
-            if index > 0:
-                story.append(PageBreak())  # every month starts on a new page
+    for index, month in enumerate(months):
+        if index > 0:
+            story.append(PageBreak())  # every month starts on a new page
 
-            story.append(Paragraph(escape(f"{year} - {month}"), TITLE_STYLE))
+        story.append(Paragraph(escape(f"{year} - {month}"), TITLE_STYLE))
 
-            income_rows = [build_row(r, INCOME_KEYS) for r in income_expenses["Income"][month]]
-            expense_rows = [build_row(r, EXPENSE_KEYS) for r in income_expenses["Expenses"][month]]
+        income_rows = [build_row(r, INCOME_KEYS) for r in income_expenses["Income"][month]]
+        expense_rows = [build_row(r, EXPENSE_KEYS) for r in income_expenses["Expenses"][month]]
 
-            story.append(Paragraph("Bevételek", SECTION_STYLE))
-            income_table = build_table(INCOME_HEADER, income_rows, income_col_widths(doc.width))
-            if not income_rows:
-                income_table = Paragraph("Nincs adat", NORMAL_STYLE)
-            story.append(income_table)
+        story.append(Paragraph("Bevételek", SECTION_STYLE))
+        income_table = build_table(INCOME_HEADER, income_rows, income_col_widths(doc.width))
+        if not income_rows:
+            income_table = Paragraph("Nincs adat", NORMAL_STYLE)
+        story.append(income_table)
 
-            story.append(Spacer(1, 20))
+        story.append(Spacer(1, 20))
 
-            story.append(Paragraph("Kiadások", SECTION_STYLE))
-            expense_table = build_table(EXPENSE_HEADER, expense_rows, expense_col_widths(doc.width))
-            if not expense_rows:
-                expense_table = Paragraph("Nincs adat", NORMAL_STYLE)
-            story.append(expense_table)
+        story.append(Paragraph("Kiadások", SECTION_STYLE))
+        expense_table = build_table(EXPENSE_HEADER, expense_rows, expense_col_widths(doc.width))
+        if not expense_rows:
+            expense_table = Paragraph("Nincs adat", NORMAL_STYLE)
+        story.append(expense_table)
 
-        doc.build(story)
+    doc.build(story)

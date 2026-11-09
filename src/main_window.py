@@ -142,7 +142,7 @@ class MainWindow(QWidget):
         layout.addLayout(header_layout)
 
         tab_widget = VerticalQTabWidget()
-        self.summary_page = SummaryPage()
+        self.summary_page = SummaryPage(user)
         tab_widget.addTab(self.summary_page, "Összesítés")
 
         for month_name in MONTHS.values():
