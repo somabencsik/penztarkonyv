@@ -1,7 +1,17 @@
 from datetime import datetime
 
 from PySide6.QtCore import Signal, Slot
-from PySide6.QtWidgets import QWidget, QLabel, QLineEdit, QPushButton, QComboBox, QHBoxLayout, QVBoxLayout, QSpacerItem, QSizePolicy
+from PySide6.QtWidgets import (
+    QComboBox,
+    QHBoxLayout,
+    QLabel,
+    QLineEdit,
+    QPushButton,
+    QSizePolicy,
+    QSpacerItem,
+    QVBoxLayout,
+    QWidget,
+)
 
 from src.utils import create_centered_label
 

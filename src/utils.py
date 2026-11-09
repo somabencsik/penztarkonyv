@@ -1,5 +1,5 @@
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QLabel, QSpinBox, QAbstractSpinBox
+from PySide6.QtWidgets import QAbstractSpinBox, QLabel, QLineEdit, QSpinBox
 
 
 def create_centered_label(
@@ -35,3 +35,10 @@ def create_spin_box(width_size: int | None = None, allow_minus: bool = False) ->
         spin_box.setFixedWidth(width_size)
     spin_box.setButtonSymbols(QAbstractSpinBox.ButtonSymbols.NoButtons)
     return spin_box
+
+
+def create_line_edit(width_size: int | None) -> QLineEdit:
+    line_edit = QLineEdit()
+    if width_size is not None:
+        line_edit.setFixedWidth(width_size)
+    return line_edit

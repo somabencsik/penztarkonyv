@@ -1,9 +1,19 @@
-from PySide6.QtCore import Slot, Signal
+from PySide6.QtCore import Signal, Slot
+from PySide6.QtWidgets import (
+    QHBoxLayout,
+    QLabel,
+    QPushButton,
+    QSizePolicy,
+    QSpacerItem,
+    QVBoxLayout,
+    QWidget,
+    QFileDialog,
+)
 
 from src.config import MONTHS
+from src.month_selector_window import MonthSelectorWindow
+from src.pdf import create_pdf
 from src.utils import create_centered_label, create_spin_box
-
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QSpacerItem, QSizePolicy
 
 
 class SummaryPage(QWidget):
@@ -15,12 +25,32 @@ class SummaryPage(QWidget):
         layout = QHBoxLayout()
 
         monthly_summary_widget = SummaryMonthly()
+        layout.addWidget(monthly_summary_widget)
+
+        right_side_layout = QVBoxLayout()
         quarter_summary_widget = SummaryQuarters()
 
-        layout.addWidget(monthly_summary_widget)
-        layout.addWidget(quarter_summary_widget)
+        right_side_layout.addWidget(quarter_summary_widget)
+
+        btn_create_pdf = QPushButton("PDF elkészítése")
+        btn_create_pdf.pressed.connect(self.create_pdf)
+        right_side_layout.addWidget(btn_create_pdf)
+
+        layout.addLayout(right_side_layout)
 
         self.setLayout(layout)
+
+    def create_pdf(self) -> None:
+        selector_window = MonthSelectorWindow()
+        if selector_window.exec():
+            dir_path = QFileDialog.getExistingDirectory(
+                parent=self,
+                caption="Válassza ki a cél mappát!",
+                options=QFileDialog.Option.DontUseNativeDialog,
+            )
+            if dir_path == "":
+                return
+            create_pdf(selector_window.selected_year, selector_window.selected_months, dir_path)
 
 
 class SummaryMonthly(QWidget):
@@ -41,7 +71,7 @@ class SummaryMonthly(QWidget):
         header_row.addWidget(create_centered_label("Összes", set_bold=True))
         layout.addLayout(header_row)
 
-        for _, month in MONTHS.items():
+        for month in MONTHS.values():
             new_widget = SummaryMonthRow(month)
             new_widget.update_quarter_summary.connect(self.update_quarter_summary)
             layout.addLayout(new_widget)

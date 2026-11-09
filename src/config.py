@@ -15,4 +15,5 @@ MONTHS = {
     12: "December"
 }
 
-DB_PATH = os.path.join(f"{os.path.expanduser('~')}", ".penztarkonyv", "db.json")
+DB_PATH = os.path.join(os.path.expanduser("~"), ".penztarkonyv", "db.json")
+DEFAULT_PDF_PATH = os.path.join(os.path.expanduser("~"), "Documents")

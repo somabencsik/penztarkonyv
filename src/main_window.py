@@ -1,15 +1,18 @@
 from PySide6.QtCore import Qt, Slot
 from PySide6.QtWidgets import (
-    QWidget, QVBoxLayout, QStackedWidget, QHBoxLayout, QPushButton
+    QHBoxLayout,
+    QPushButton,
+    QStackedWidget,
+    QVBoxLayout,
+    QWidget,
 )
 from PySide6_VerticalQTabWidget import VerticalQTabWidget
 
 from src.config import MONTHS
-from src.monthly_page import MonthlyPage, MonthlyIncomeWidget, MonthlyExpanseWidget
-from src.summary_page import SummaryPage, SummaryMonthRow
-from src.user_selection import UserSelection
-
 from src.db import read_db, save_db
+from src.monthly_page import MonthlyExpanseWidget, MonthlyIncomeWidget, MonthlyPage
+from src.summary_page import SummaryMonthRow, SummaryPage
+from src.user_selection import UserSelection
 from src.utils import create_centered_label
 
 
@@ -77,7 +80,7 @@ class MainWindow(QWidget):
             income_data = {
                 "serial": o.serial_number,
                 "date": o.date_widget.date().toString(),
-                "certificate_number": o.certificate_number.value(),
+                "certificate_number": o.certificate_number.text(),
                 "title": o.title_input.text(),
                 "price": o.price.value(),
                 "other": o.other.value(),
@@ -101,7 +104,7 @@ class MainWindow(QWidget):
             expense_data = {
                 "serial": o.serial_number,
                 "date": o.date_widget.date().toString(),
-                "material_price": o.material_price.value(),
+                "material_price": o.material_price.text(),
                 "other": o.other.value(),
                 "transmit_price": o.transmit_price.value(),
                 "summary": o.summary.value()
@@ -142,7 +145,7 @@ class MainWindow(QWidget):
         self.summary_page = SummaryPage()
         tab_widget.addTab(self.summary_page, "Összesítés")
 
-        for _, month_name in MONTHS.items():
+        for month_name in MONTHS.values():
             monthly_page = MonthlyPage(year, month_name)
             for income_data in self.db[self.current_user][year]["Income"][month_name]:
                 monthly_page.add_income(income_data)
