@@ -1,6 +1,5 @@
 from PySide6.QtCore import Signal, Slot
 from PySide6.QtWidgets import (
-    QFileDialog,
     QHBoxLayout,
     QLabel,
     QPushButton,
@@ -44,14 +43,7 @@ class SummaryPage(QWidget):
     def create_pdf(self) -> None:
         selector_window = MonthSelectorWindow()
         if selector_window.exec():
-            dir_path = QFileDialog.getExistingDirectory(
-                parent=self,
-                caption="Válassza ki a cél mappát!",
-                options=QFileDialog.Option.DontUseNativeDialog,
-            )
-            if dir_path == "":
-                return
-            create_pdf(selector_window.selected_year, selector_window.selected_months, dir_path, self.user)
+            create_pdf(selector_window.selected_year, selector_window.selected_months, selector_window.path_to_save.text(), self.user)
 
 
 class SummaryMonthly(QWidget):

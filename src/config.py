@@ -16,4 +16,4 @@ MONTHS = {
 }
 
 DB_PATH = os.path.join(os.path.expanduser("~"), ".penztarkonyv", "db.json")
-DEFAULT_PDF_PATH = os.path.join(os.path.expanduser("~"), "Documents")
+PATH_TO_SAVE_FILE = os.path.join(os.path.expanduser("~"), ".penztarkonyv", "path_to_save")

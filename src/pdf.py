@@ -1,4 +1,5 @@
 import os
+from datetime import datetime
 from xml.sax.saxutils import escape
 
 from PySide6.QtCore import QDate
@@ -108,7 +109,9 @@ def build_table(header: list[str], rows: list[list[str]], col_widths: list[float
 def create_pdf(year: str, months: list[str], output_path: str, user: str) -> None:
     db = read_db()[user]
 
-    user_path = os.path.join(output_path, user, f"{year}.pdf")
+    current_date = datetime.now()
+    pdf_name = f"{current_date.year}_{current_date.month}_{current_date.day}.pdf"
+    user_path = os.path.join(output_path, user, pdf_name)
     os.makedirs(os.path.dirname(user_path), exist_ok=True)
 
     doc = SimpleDocTemplate(
